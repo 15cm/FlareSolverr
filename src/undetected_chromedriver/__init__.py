@@ -15,8 +15,6 @@ by UltrafunkAmsterdam (https://github.com/ultrafunkamsterdam)
 
 """
 from __future__ import annotations
-
-
 __version__ = "3.4.6"
 
 import json
@@ -45,7 +43,6 @@ from .patcher import Patcher
 from .reactor import Reactor
 from .webelement import UCWebElement
 from .webelement import WebElement
-
 
 __all__ = (
     "Chrome",
@@ -122,7 +119,7 @@ class Chrome(selenium.webdriver.chrome.webdriver.WebDriver):
         suppress_welcome=True,
         use_subprocess=False,
         debug=False,
-        no_sandbox=True,	
+        no_sandbox=True,
         windows_headless=False,
         **kw,
     ):
@@ -238,7 +235,6 @@ class Chrome(selenium.webdriver.chrome.webdriver.WebDriver):
         """
 
         finalize(self, self._ensure_close, self)
-        self.debug = debug
         self.patcher = Patcher(
             executable_path=driver_executable_path,
             force=patcher_force_close,
@@ -370,7 +366,6 @@ class Chrome(selenium.webdriver.chrome.webdriver.WebDriver):
             options.arguments.extend(["--no-default-browser-check", "--no-first-run"])
         if no_sandbox:
             options.arguments.extend(["--no-sandbox", "--test-type"])
-
         if headless or options.headless:
             v_main = int(self.patcher.version_main) if self.patcher.version_main else 108
             if v_main < 108:
