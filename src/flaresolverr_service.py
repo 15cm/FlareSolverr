@@ -312,11 +312,9 @@ def _evil_logic(req: V1RequestBase, driver: WebDriver, method: str) -> Challenge
             raise Exception('Cloudflare has blocked this request. '
                             'Probably your IP is banned for this site, check in your web browser.')
     # find access denied selectors
-    for selector in ACCESS_DENIED_SELECTORS:
-        found_elements = driver.find_elements(By.CSS_SELECTOR, selector)
-        if len(found_elements) > 0:
-            raise Exception('Cloudflare has blocked this request. '
-                            'Probably your IP is banned for this site, check in your web browser.')
+    if check_access_denied(driver):
+        raise Exception('Cloudflare has blocked this request. '
+                        'Probably your IP is banned for this site, check in your web browser.')
 
     # find challenge by title
     challenge_found = False
@@ -349,7 +347,6 @@ def _evil_logic(req: V1RequestBase, driver: WebDriver, method: str) -> Challenge
                     logging.debug("Waiting for selector (attempt " + str(attempt) + "): " + selector)
                     WebDriverWait(driver, SHORT_TIMEOUT).until_not(
                         presence_of_element_located((By.CSS_SELECTOR, selector)))
-
                 # all elements not found
                 break
 
@@ -418,3 +415,32 @@ def _post_request(req: V1RequestBase, driver: WebDriver):
         </body>
         </html>"""
     driver.get("data:text/html;charset=utf-8," + html_content)
+
+
+def check_access_denied(driver):
+    for selector in ACCESS_DENIED_SELECTORS:
+        found_elements = driver.find_elements(By.CSS_SELECTOR, selector)
+        if len(found_elements) > 0:
+            return True
+
+    return False
+
+
+def check_captcha_present(driver):
+    for selector in CAPTCHA_SELECTORS:
+        found_elements = driver.find_elements(By.CSS_SELECTOR, selector)
+        if len(found_elements) > 0:
+            return True
+
+    return False
+
+
+def save_debug_info(driver):
+    logging.debug('Saved screenshot')
+
+    file_name = '/screenshots/%d' % (int(time.time() * 1000))
+
+    driver.save_screenshot('%s.png' % file_name)
+
+    with open('%s.txt' % file_name, 'w') as f:
+        f.write(driver.page_source)
