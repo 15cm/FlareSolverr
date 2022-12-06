@@ -343,7 +343,7 @@ def _evil_logic(req: V1RequestBase, driver: WebDriver, method: str) -> Challenge
             raise Exception('Cloudflare has blocked this request. '
                             'Probably your IP is banned for this site, check in your web browser.')
     # find access denied selectors
-    if check_access_denied(driver):
+    if _check_access_denied(driver):
         raise Exception('Cloudflare has blocked this request. '
                         'Probably your IP is banned for this site, check in your web browser.')
 
@@ -450,6 +450,7 @@ def _post_request(req: V1RequestBase, driver: WebDriver):
 
 
 def check_access_denied(driver: WebDriver):
+def _check_access_denied(driver: WebDriver):
     for selector in ACCESS_DENIED_SELECTORS:
         found_elements = driver.find_elements(By.CSS_SELECTOR, selector)
         if len(found_elements) > 0:
