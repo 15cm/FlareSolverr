@@ -38,6 +38,7 @@ CHALLENGE_TITLES = [
     # DDoS-GUARD
     'DDoS-Guard'
 ]
+
 CHALLENGE_SELECTORS = [
     # Cloudflare
     '#cf-challenge-running', '.ray_id', '.attack-box', '#cf-please-wait', '#challenge-spinner', '#trk_jschal_js',
@@ -48,6 +49,8 @@ CHALLENGE_SELECTORS = [
 ]
 SHORT_TIMEOUT = 10
 SESSIONS_STORAGE = SessionsStorage()
+
+IS_DEBUG = False
 
 
 def test_browser_installation():
@@ -351,7 +354,7 @@ def _evil_logic(req: V1RequestBase, driver: WebDriver, method: str) -> Challenge
                 break
 
             except TimeoutException:
-                logging.debug("Timeout waiting for selector")
+                captcha_type = _captcha_detect_type(driver)
 
                 click_verify(driver)
 
@@ -362,7 +365,7 @@ def _evil_logic(req: V1RequestBase, driver: WebDriver, method: str) -> Challenge
         logging.debug("Waiting for redirect")
         # noinspection PyBroadException
         try:
-            WebDriverWait(driver, SHORT_TIMEOUT).until(staleness_of(html_element))
+            WebDriverWait(driver, SHORT_TIMEOUT + 25000).until(staleness_of(html_element))
         except Exception:
             logging.debug("Timeout waiting for redirect")
 
@@ -417,7 +420,7 @@ def _post_request(req: V1RequestBase, driver: WebDriver):
     driver.get("data:text/html;charset=utf-8," + html_content)
 
 
-def check_access_denied(driver):
+def check_access_denied(driver: WebDriver):
     for selector in ACCESS_DENIED_SELECTORS:
         found_elements = driver.find_elements(By.CSS_SELECTOR, selector)
         if len(found_elements) > 0:
@@ -426,21 +429,90 @@ def check_access_denied(driver):
     return False
 
 
-def check_captcha_present(driver):
+def _captcha_detect_type(driver: WebDriver):
     for selector in CAPTCHA_SELECTORS:
         found_elements = driver.find_elements(By.CSS_SELECTOR, selector)
         if len(found_elements) > 0:
-            return True
+            return CAPTCHA_SELECTORS[selector]
+
+    return None
+
+
+def _captcha_solve(driver: WebDriver, captcha_type: str) -> bool:
+    logging.debug('Detected %s captcha' % captcha_type)
+
+    if captcha_type == 'hCaptcha':
+        logging.debug('[hCaptcha] Searching for sitekey')
+
+        # Parse sitekey.
+        c_iframe = driver.find_element(By.TAG_NAME, 'iframe')
+        c_iframe_src = c_iframe.get_attribute('src')
+
+        # Find hCaptcha sitekey.
+        sitekey = re.findall(r"sitekey=([a-z0-9-]+)&", c_iframe_src)
+        logging.debug('[hCaptcha] Found sitekey %s' % sitekey)
+
+        # Find element in which the result goes.
+        result_el = driver.find_element(By.CSS_SELECTOR, 'textarea[name="h-captcha-response"]')
+        logging.debug('[hCaptcha] Found hcaptcha response textarea with id %s' % result_el.get_attribute('id'))
+
+        # Set captcha result.
+        driver.execute_script('document.getElementById("%s").value = "%s";' % (result_el.get_attribute('id'), 'Test123'))
+
+        # Submit form.
+        driver.execute_script('document.getElementById("challenge-form").submit();')
+
+        return True
+    elif captcha_type == 'turnstile':
+        # Find button to press.
+        logging.debug('[turnstile] Searching for button')
+
+        c_switched = False
+        c_button = driver.find_elements(By.CSS_SELECTOR, '.big-button.pow-button')
+
+        if len(c_button) != 1:
+            logging.debug('[turnstile] Searching for other button')
+
+            try:
+                c_iframe = driver.find_element(By.TAG_NAME, 'iframe')
+
+                driver.switch_to.frame(c_iframe)
+
+                c_switched = True
+                c_button = driver.find_elements(By.CSS_SELECTOR, 'span.mark')
+            except NoSuchElementException:
+                logging.debug('[turnstile] Relevant element not found')
+
+        if len(c_button) != 1:
+            logging.debug('[turnstile] Unable to find button (%d)' % len(c_button))
+            return False
+
+        # Click the button.
+        logging.debug('[turnstile] Clicking button')
+
+        c_button[0].click()
+
+        # Switch back.
+        if c_switched:
+            driver.switch_to.parent_frame()
+
+        return True
 
     return False
 
 
-def save_debug_info(driver):
-    logging.debug('Saved screenshot')
+def _save_debug_info(driver):
+    if not IS_DEBUG:
+        return
 
-    file_name = '/screenshots/%d' % (int(time.time() * 1000))
+    logging.debug('Saving debug info')
+
+    if os.path.exists('/screenshots'):
+        file_name = '/screenshots/%d' % (int(time.time() * 1000))
+    else:
+        file_name = os.path.join(os.path.dirname(__file__), '..', 'screenshots', str(int(time.time() * 1000)))
 
     driver.save_screenshot('%s.png' % file_name)
 
-    with open('%s.txt' % file_name, 'w') as f:
+    with open('%s.html' % file_name, 'w') as f:
         f.write(driver.page_source)
