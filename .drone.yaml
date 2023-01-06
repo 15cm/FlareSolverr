@@ -7,7 +7,7 @@ steps:
   - name: docker
     image: plugins/kaniko:1.6.10-kaniko1.8.1
     settings:
-      repo: 15cm/FlareSolverr
+      repo: 15cm/flaresolverr
       auto_tag: true
       username:
         from_secret: docker_username
