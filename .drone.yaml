@@ -17,6 +17,7 @@ steps:
 trigger:
   branch:
     - main
+    - v3beta
   event:
     - push
     - custom
