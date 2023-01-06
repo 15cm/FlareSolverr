@@ -28,7 +28,7 @@ COPY requirements.txt .
 
 RUN pip install -r requirements.txt && \
     # Remove temporary files
-    find / -name '*.pyc' -delete
+    (find / -name '*.pyc' -delete || true)
 
 # Create flaresolverr user
 RUN useradd --home-dir /app --shell /bin/sh flaresolverr && \
