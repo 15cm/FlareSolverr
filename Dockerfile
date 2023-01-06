@@ -30,13 +30,7 @@ RUN pip install -r requirements.txt && \
     # Remove temporary files
     (find / -name '*.pyc' -delete || true)
 
-# Create flaresolverr user
-RUN useradd --home-dir /app --shell /bin/sh flaresolverr && \
-    chown -R flaresolverr:flaresolverr . && \
-    mkdir /screenshots && \
-    chown -R flaresolverr:flaresolverr /screenshots
-
-USER flaresolverr
+RUN mkdir /screenshots
 
 COPY src .
 COPY package.json ../
