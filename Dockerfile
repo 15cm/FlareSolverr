@@ -43,7 +43,7 @@ RUN pip install -r requirements.txt && \
     # Remove temporary files
     && rm -rf /root/.cache
 
-USER flaresolverr
+RUN mkdir /screenshots
 
 RUN mkdir -p "/app/.config/chromium/Crash Reports/pending"
 
