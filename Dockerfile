@@ -32,14 +32,14 @@ RUN dpkg -i /libgl1-mesa-dri.deb \
     && apt-get install -y --no-install-recommends chromium chromium-common chromium-driver xvfb dumb-init \
         procps curl vim xauth \
     # Remove temporary files and hardware decoding libraries
-    rm -rf /var/lib/apt/lists/* && \
-    rm -f /usr/lib/x86_64-linux-gnu/libmfxhw* && \
-    rm -rf /root/.cache
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -f /usr/lib/x86_64-linux-gnu/libmfxhw* \
+    && rm -rf /root/.cache
 
 # Install Python dependencies
 COPY requirements.txt .
 
-RUN pip install -r requirements.txt && \
+RUN pip install -r requirements.txt \
     # Remove temporary files
     && rm -rf /root/.cache
 
