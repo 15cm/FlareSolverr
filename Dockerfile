@@ -35,18 +35,12 @@ RUN dpkg -i /libgl1-mesa-dri.deb \
     && rm -rf /var/lib/apt/lists/* \
     && rm -f /usr/lib/x86_64-linux-gnu/libmfxhw* \
     && rm -f /usr/lib/x86_64-linux-gnu/mfx/* \
-    # Create flaresolverr user
-    && useradd --home-dir /app --shell /bin/sh flaresolverr \
-    && mv /usr/bin/chromedriver chromedriver \
-    && chown -R flaresolverr:flaresolverr .
 
 # Install Python dependencies
 COPY requirements.txt .
 RUN pip install -r requirements.txt \
     # Remove temporary files
     && rm -rf /root/.cache
-
-USER flaresolverr
 
 RUN mkdir -p "/app/.config/chromium/Crash Reports/pending"
 
