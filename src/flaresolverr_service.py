@@ -2,6 +2,7 @@ import logging
 import platform
 import sys
 import time
+from typing import Optional
 from datetime import timedelta
 from urllib.parse import unquote
 
