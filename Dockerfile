@@ -34,7 +34,7 @@ RUN dpkg -i /libgl1-mesa-dri.deb \
     # Remove temporary files and hardware decoding libraries
     && rm -rf /var/lib/apt/lists/* \
     && rm -f /usr/lib/x86_64-linux-gnu/libmfxhw* \
-    && rm -f /usr/lib/x86_64-linux-gnu/mfx/* \
+    && rm -f /usr/lib/x86_64-linux-gnu/mfx/*
 
 # Install Python dependencies
 COPY requirements.txt .
